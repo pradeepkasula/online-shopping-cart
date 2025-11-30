@@ -47,6 +47,7 @@ echo Frontend:        http://localhost
 echo Product Service: http://localhost:8081
 echo Cart Service:    http://localhost:8082
 echo Order Service:   http://localhost:8083
+echo User Service:    http://localhost:8084
 echo.
 echo To view logs: docker-compose logs -f
 echo To stop: docker-compose down -v

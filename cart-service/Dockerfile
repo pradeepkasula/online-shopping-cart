@@ -4,10 +4,10 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the pre-built JAR
-COPY target/cart-service-*.jar cart-service.jar
+COPY cart-service/target/cart-service-*.jar cart-service.jar
 
 # Copy wait-for-it.sh script
-COPY wait-for-it.sh /wait-for-it.sh
+COPY cart-service/wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 # Expose port

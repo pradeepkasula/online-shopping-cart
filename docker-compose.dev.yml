@@ -1,6 +1,28 @@
 version: '3.8'
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: productdb
+    ports:
+      - "3307:3306"
+    networks:
+      - shopping-cart-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
   product-service:
     build:
       context: .
@@ -13,6 +35,8 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - SERVER_PORT=8081
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    depends_on:
+      - mysql
     networks:
       - shopping-cart-network
 
@@ -30,6 +54,7 @@ services:
       - PRODUCT_SERVICE_URL=http://product-service:8081
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
     depends_on:
+      - mysql
       - product-service
     networks:
       - shopping-cart-network
@@ -48,7 +73,25 @@ services:
       - PRODUCT_SERVICE_URL=http://product-service:8081
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
     depends_on:
+      - mysql
       - product-service
+    networks:
+      - shopping-cart-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service-dev
+    ports:
+      - "8084:8084"
+      - "5008:5008"  # Debug port
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8084
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008
+    depends_on:
+      - mysql
     networks:
       - shopping-cart-network
 
@@ -62,6 +105,7 @@ services:
       - REACT_APP_PRODUCT_SERVICE_URL=http://localhost:8081
       - REACT_APP_CART_SERVICE_URL=http://localhost:8082
       - REACT_APP_ORDER_SERVICE_URL=http://localhost:8083
+      - REACT_APP_USER_SERVICE_URL=http://localhost:8084
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -70,6 +114,7 @@ services:
       - product-service
       - cart-service
       - order-service
+      - user-service
     networks:
       - shopping-cart-network
 

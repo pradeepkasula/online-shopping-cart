@@ -5,10 +5,10 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the jar file
-COPY target/product-service-*.jar product-service.jar
+COPY product-service/target/product-service-*.jar product-service.jar
 
 # Wait for MySQL to be ready before starting the service
-COPY wait-for-it.sh /wait-for-it.sh
+COPY product-service/wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 # Expose port

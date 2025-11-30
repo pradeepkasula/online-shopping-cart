@@ -14,19 +14,19 @@ A full-stack online shopping cart application built with Spring Boot microservic
 ┌────────────┴────────────────────────────────────────────────┐
 │                     API Gateway Layer                        │
 │              (Direct service communication)                  │
-└─────┬──────────────┬──────────────┬─────────────────────────┘
-      │              │              │
-      │              │              │
-┌─────▼──────┐ ┌────▼──────┐ ┌────▼──────┐
-│  Product   │ │   Cart    │ │   Order   │
-│  Service   │ │  Service  │ │  Service  │
-│ (Port 8081)│ │(Port 8082)│ │(Port 8083)│
-└─────┬──────┘ └────┬──────┘ └────┬──────┘
-      │              │              │
-      │              │              │
-┌─────▼──────────────▼──────────────▼──────┐
-│         MySQL Database                   │
-└───────────────────────────────────────────┘
+└─────┬──────────────┬──────────────┬──────────────┬──────────┘
+      │              │              │              │
+      │              │              │              │
+┌─────▼──────┐ ┌────▼──────┐ ┌────▼──────┐ ┌─────▼──────┐
+│  Product   │ │   Cart    │ │   Order   │ │   User     │
+│  Service   │ │  Service  │ │  Service  │ │  Service   │
+│ (Port 8081)│ │(Port 8082)│ │(Port 8083)│ │(Port 8084) │
+└─────┬──────┘ └────┬──────┘ └────┬──────┘ └─────┬──────┘
+      │              │              │              │
+      │              │              │              │
+┌─────▼──────────────▼──────────────▼──────────────▼──────┐
+│         MySQL Database                                   │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ## Technology Stack
@@ -35,6 +35,9 @@ A full-stack online shopping cart application built with Spring Boot microservic
 - **Spring Boot 3.2.0** - Microservices framework
 - **Spring Web** - REST API development
 - **Spring Data JPA** - Database access
+- **Spring Security** - Authentication and authorization
+- **JWT** - JSON Web Token for stateless authentication
+- **Log4j2** - Logging framework
 - **MySQL** - Relational database
 - **Maven** - Build tool
 - **Java 17** - Programming language
@@ -74,6 +77,10 @@ online-shopping-cart/
 │   ├── src/
 │   ├── Dockerfile
 │   └── pom.xml
+├── user-service/             # User authentication microservice
+│   ├── src/
+│   ├── Dockerfile
+│   └── pom.xml
 ├── frontend/                 # React application
 │   ├── src/
 │   ├── public/
@@ -82,6 +89,10 @@ online-shopping-cart/
 │   └── package.json
 ├── docker-compose.yml        # Production Docker Compose
 ├── docker-compose.dev.yml    # Development Docker Compose
+├── run-app.bat              # Windows startup script
+├── run-app-dev.bat          # Windows dev mode startup script
+├── stop-app.bat             # Windows stop script
+├── cleanup-docker.bat       # Docker cleanup script
 ├── pom.xml                   # Parent POM
 └── README.md
 ```
@@ -106,6 +117,7 @@ online-shopping-cart/
    - Product Service: http://localhost:8081
    - Cart Service: http://localhost:8082
    - Order Service: http://localhost:8083
+   - User Service: http://localhost:8084
 
 4. **Stop all services**
    ```bash
@@ -139,6 +151,12 @@ online-shopping-cart/
    mvn spring-boot:run
    ```
 
+5. **Run User Service** (in a new terminal)
+   ```bash
+   cd user-service
+   mvn spring-boot:run
+   ```
+
 #### Frontend
 
 1. **Install dependencies**
@@ -163,8 +181,14 @@ For development with hot-reload:
 docker-compose -f docker-compose.dev.yml up
 ```
 
+Or use the provided batch script on Windows:
+
+```bat
+run-app-dev.bat
+```
+
 This configuration:
-- Exposes debug ports for backend services (5005, 5006, 5007)
+- Exposes debug ports for backend services (5005, 5006, 5007, 5008)
 - Enables hot-reload for React frontend
 - Uses volume mounts for live code updates
 
@@ -268,6 +292,14 @@ This script will:
 - `GET /api/orders/order/{orderId}` - Get order by ID
 - `PUT /api/orders/{orderId}/status` - Update order status
 
+### User Service (Port 8084)
+
+- `POST /api/users/signup` - Register new user
+- `POST /api/users/login` - User login (returns JWT token)
+- `POST /api/users/forgot-password` - Request password reset
+- `POST /api/users/change-password` - Change user password
+- `GET /api/users/me` - Get current user details (requires authentication)
+
 ## Testing
 
 ### Running Tests
@@ -294,6 +326,7 @@ Each service connects to a MySQL database. You can access MySQL using a client s
 - Product Service: `jdbc:mysql://localhost:3306/productdb`
 - Cart Service: `jdbc:mysql://localhost:3306/cartdb`
 - Order Service: `jdbc:mysql://localhost:3306/orderdb`
+- User Service: `jdbc:mysql://localhost:3306/userdb`
 
 ## Configuration
 
@@ -310,6 +343,7 @@ Frontend environment variables:
 - `REACT_APP_PRODUCT_SERVICE_URL` - Product service URL
 - `REACT_APP_CART_SERVICE_URL` - Cart service URL
 - `REACT_APP_ORDER_SERVICE_URL` - Order service URL
+- `REACT_APP_USER_SERVICE_URL` - User service URL
 
 ### Application Properties
 
@@ -374,7 +408,17 @@ docker-compose logs -f
 ```
 
 **View Application Logs:**
-Logs are printed to console by default. In production, configure logging to files.
+
+All services use Log4j2 for logging. Logs include detailed API request/response information with timestamps, HTTP methods, URIs, status codes, and execution time.
+
+- Console logs: Available through Docker logs
+- File logs: Written to `/logs` directory inside each container
+  - `product-service.log`
+  - `cart-service.log`
+  - `order-service.log`
+  - `user-service.log`
+
+Logs automatically rotate daily or when they reach 10MB, keeping the last 10 files.
 
 ## Docker Image Cleanup
 
