@@ -25,7 +25,7 @@ A full-stack online shopping cart application built with Spring Boot microservic
       │              │              │
       │              │              │
 ┌─────▼──────────────▼──────────────▼──────┐
-│         H2 Database (Development)         │
+│         MySQL Database                   │
 └───────────────────────────────────────────┘
 ```
 
@@ -35,7 +35,7 @@ A full-stack online shopping cart application built with Spring Boot microservic
 - **Spring Boot 3.2.0** - Microservices framework
 - **Spring Web** - REST API development
 - **Spring Data JPA** - Database access
-- **H2 Database** - In-memory database for development
+- **MySQL** - Relational database
 - **Maven** - Build tool
 - **Java 17** - Programming language
 
@@ -168,6 +168,22 @@ This configuration:
 - Enables hot-reload for React frontend
 - Uses volume mounts for live code updates
 
+## Quick Start on Windows
+
+If you are using Windows, you can use the provided batch script to build and run the entire application:
+
+```bat
+run-app.bat
+```
+
+This script will:
+- Remove all dangling Docker images to free up disk space before starting
+- Build backend services with Maven
+- Stop and remove all containers and volumes
+- Build and start Docker containers
+- Wait for services to start
+- Open the application in your browser
+
 ## Using Kiro IDE
 
 ### Importing the Project
@@ -265,18 +281,19 @@ cd product-service
 mvn test
 ```
 
-### Accessing H2 Console (Development)
+### Accessing MySQL (Development)
 
-Each service has an H2 console available:
+Each service connects to a MySQL database. You can access MySQL using a client such as MySQL Workbench or the command line:
 
-- Product Service: http://localhost:8081/h2-console
-- Cart Service: http://localhost:8082/h2-console
-- Order Service: http://localhost:8083/h2-console
+- Host: localhost
+- Port: 3306
+- Username: root
+- Password: (see docker-compose.yml)
 
-**Connection Details:**
-- JDBC URL: `jdbc:h2:mem:productdb` (or `cartdb`, `orderdb`)
-- Username: `sa`
-- Password: (leave empty)
+**Example JDBC URLs:**
+- Product Service: `jdbc:mysql://localhost:3306/productdb`
+- Cart Service: `jdbc:mysql://localhost:3306/cartdb`
+- Order Service: `jdbc:mysql://localhost:3306/orderdb`
 
 ## Configuration
 
@@ -302,8 +319,10 @@ Each service has `application.properties` in `src/main/resources/`:
 # Example: product-service/src/main/resources/application.properties
 spring.application.name=product-service
 server.port=8081
-spring.datasource.url=jdbc:h2:mem:productdb
-spring.jpa.hibernate.ddl-auto=create-drop
+spring.datasource.url=jdbc:mysql://localhost:3306/productdb
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
 ```
 
 ## Troubleshooting
@@ -357,6 +376,16 @@ docker-compose logs -f
 **View Application Logs:**
 Logs are printed to console by default. In production, configure logging to files.
 
+## Docker Image Cleanup
+
+Dangling Docker images (unused images) can accumulate and consume disk space. The `run-app.bat` script on Windows will automatically remove these before starting the application using:
+
+```sh
+docker image prune -f
+```
+
+For Linux/macOS users, you can run this command manually if needed.
+
 ## Production Deployment
 
 ### Building for Production
@@ -384,7 +413,7 @@ Logs are printed to console by default. In production, configure logging to file
 
 ### Production Considerations
 
-- Use PostgreSQL or MySQL instead of H2
+- Use PostgreSQL or MySQL for production
 - Enable HTTPS/TLS
 - Implement authentication and authorization
 - Add API rate limiting

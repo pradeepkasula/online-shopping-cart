@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import './ProductCard.css';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, inCart = false, cartQuantity = 0 }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [adding, setAdding] = useState(false);
@@ -42,13 +42,16 @@ const ProductCard = ({ product }) => {
             {isOutOfStock ? 'Out of Stock' : `${product.stock} in stock`}
           </p>
         </div>
+        {inCart && (
+          <p className="in-cart-info">In Cart{cartQuantity > 0 ? `: ${cartQuantity}` : ''}</p>
+        )}
         {message && <p className="cart-message">{message}</p>}
         <button
           className="add-to-cart-btn"
           onClick={handleAddToCart}
           disabled={isOutOfStock || adding}
         >
-          {adding ? 'Adding...' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+          {adding ? 'Adding...' : isOutOfStock ? 'Out of Stock' : inCart ? 'Add More' : 'Add to Cart'}
         </button>
       </div>
     </div>

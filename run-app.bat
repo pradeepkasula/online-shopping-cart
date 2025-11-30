@@ -4,24 +4,29 @@ echo Shopping Cart Microservices Application
 echo ========================================
 echo.
 
+echo Step 0: Removing all dangling Docker images...
+echo ========================================
+docker image prune -f
+
+echo.
 echo Step 1: Building backend services with Maven...
 echo ========================================
 call mvn clean package -DskipTests
 
 echo.
-echo Step 2: Stopping any existing containers...
+echo Step 2: Stopping and removing all containers and volumes...
 echo ========================================
-call docker-compose down
+call docker-compose down -v
 
 echo.
-echo Step 3: Building and starting Docker containers...
+echo Step 3: Building and starting Docker containers (force recreate)...
 echo ========================================
-call docker-compose up --build -d
+call docker-compose up --build --force-recreate -d
 
 echo.
-echo Step 4: Waiting for services to start (60 seconds)...
+echo Step 4: Waiting for services to start (20 seconds)...
 echo ========================================
-timeout /t 60 /nobreak
+timeout /t 20 /nobreak
 
 echo.
 echo Step 5: Checking container status...
@@ -44,6 +49,6 @@ echo Cart Service:    http://localhost:8082
 echo Order Service:   http://localhost:8083
 echo.
 echo To view logs: docker-compose logs -f
-echo To stop: docker-compose down
+echo To stop: docker-compose down -v
 echo.
 pause

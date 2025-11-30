@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import productService from '../../services/productService';
 import './ProductList.css';
+import { useCart } from '../../context/CartContext';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { cart } = useCart();
 
   useEffect(() => {
     fetchProducts();
@@ -41,9 +43,18 @@ const ProductList = () => {
         <p className="no-products">No products available</p>
       ) : (
         <div className="product-grid">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {products.map((product) => {
+            // Check if product is in cart
+            const cartItem = cart.items.find(item => item.productId === product.id);
+            return (
+              <ProductCard
+                key={product.id}
+                product={product}
+                inCart={!!cartItem}
+                cartQuantity={cartItem ? cartItem.quantity : 0}
+              />
+            );
+          })}
         </div>
       )}
     </div>
